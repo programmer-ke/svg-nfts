@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { NextPage } from "next";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import { Address } from "~~/components/scaffold-eth";
+import { LoogiesDisplay } from "~~/components/LoogiesDisplay";
 import { useScaffoldContract, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 const Home: NextPage = () => {
@@ -16,6 +16,9 @@ const Home: NextPage = () => {
   });
   const [loadingLoogies, setLoadingLoogies] = useState(true);
   const [allLoogies, setAllLoogies] = useState<any[]>();
+
+  const [page, setPage] = useState(1n);
+  const perPage = 12n;
 
   const { data: totalSupply } = useScaffoldReadContract({
     contractName: "YourCollectible",
@@ -31,8 +34,12 @@ const Home: NextPage = () => {
       setLoadingLoogies(true);
       if (contract && totalSupply) {
         const collectibleUpdate = [];
-        const startIndex = totalSupply - 1n;
-        for (let tokenIndex = startIndex; tokenIndex >= 0; tokenIndex--) {
+        const offset = (page - 1n) * perPage;
+        // displaying in descending order of indices
+        const remainder = totalSupply - offset;
+        const startIndex = remainder - 1n;
+        const stopIndex = remainder > perPage ? startIndex - perPage : startIndex - remainder;
+        for (let tokenIndex = startIndex; tokenIndex > stopIndex; tokenIndex--) {
           try {
             const tokenId = await contract.read.tokenByIndex([tokenIndex]);
             const tokenURI = await contract.read.tokenURI([tokenId]);
@@ -54,7 +61,7 @@ const Home: NextPage = () => {
       setLoadingLoogies(false);
     }
     updateAllLoogies();
-  }, [totalSupply, Boolean(contract)]);
+  }, [totalSupply, page, Boolean(contract)]);
 
   return (
     <>
@@ -82,29 +89,16 @@ const Home: NextPage = () => {
         <p> {3728n - (totalSupply || 0n)} Loogies left </p>
       </div>
 
-      <div className="flex-grow bg-base-300 w-full mt-4 p-8 flex justify-center items-center space-x-2">
-        {loadingLoogies ? (
-          <p className="">Loading...</p>
-        ) : !allLoogies?.length ? (
-          <p className="font-medium">No loogies minted</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 justify-center">
-            {allLoogies.map(loogie => {
-              return (
-                <div
-                  key={loogie.id}
-                  className="flex flex-col bg-base-100 p-5 text-center items-center max-w-xs rounded-3xl"
-                >
-                  <h2 className="">{loogie.name}</h2>
-                  <Image src={loogie.image} alt={loogie.name} width={300} height={300} />
-                  <p>{loogie.description}</p>
-                  <Address address={loogie.owner} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* Loogies display */}
+      <LoogiesDisplay
+        loadingLoogies={loadingLoogies}
+        allLoogies={allLoogies}
+        page={page}
+        setPage={setPage}
+        totalSupply={totalSupply}
+        perPage={perPage}
+      />
+      {/* end of loogies display */}
     </>
   );
 };
