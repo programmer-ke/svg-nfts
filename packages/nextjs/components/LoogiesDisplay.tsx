@@ -17,7 +17,7 @@ type LoogiesDisplayProps = {
   allLoogies: Loogie[] | undefined;
   page: bigint;
   setPage: (page: bigint) => void;
-  totalSupply: bigint | undefined;
+  totalTokenCount: bigint | undefined;
   perPage: bigint;
 };
 
@@ -26,7 +26,7 @@ export const LoogiesDisplay = ({
   allLoogies,
   page,
   setPage,
-  totalSupply,
+  totalTokenCount,
   perPage,
 }: LoogiesDisplayProps) => {
   return (
@@ -62,7 +62,7 @@ export const LoogiesDisplay = ({
               </button>
             )}
             <button className="join-item btn btn-disabled"> Page {page.toString()} </button>
-            {totalSupply !== undefined && totalSupply > page * perPage && (
+            {totalTokenCount !== undefined && totalTokenCount > page * perPage && (
               <button className="join-item btn" onClick={() => setPage(page + 1n)}>
                 {" "}
                 »{" "}
